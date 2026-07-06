@@ -766,18 +766,209 @@ def extrair_notas_dinamicamente(pdf_path, pagina_inicio):
     return None
 
 # ─────────────────────────────────────────────────────────────────
-# LAYOUT
+# TEMA / IDENTIDADE VISUAL
 # ─────────────────────────────────────────────────────────────────
+INK      = "#132A3A"   # navy de prancha técnica
+INK_2    = "#1D3E54"   # navy um tom mais claro (hover/cards na sidebar)
+PAPER    = "#F4F6F5"   # papel técnico frio (não creme)
+PAPER_2  = "#FFFFFF"   # cartão sobre o papel
+LINE     = "#D7DEDC"   # linha/traço sutil sobre o papel
+AMBER    = "#F2A900"   # âmbar de sinalização elétrica (destaque único)
+TEXT     = "#16232B"
+
 st.set_page_config(
     page_title="Estruturas Elétricas – Neoenergia Elektro",
     page_icon="⚡",
     layout="wide",
 )
 
+st.markdown(f"""
+<style>
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap');
+
+html, body, [class*="css"] {{
+    font-family: 'IBM Plex Sans', sans-serif;
+    color: {TEXT};
+}}
+
+/* Fundo geral: papel técnico com grade de pontos sutil */
+.stApp {{
+    background-color: {PAPER};
+    background-image: radial-gradient({LINE} 1px, transparent 1px);
+    background-size: 22px 22px;
+}}
+
+.block-container {{
+    padding-top: 2rem;
+    max-width: 1200px;
+}}
+
+/* ---- Sidebar: painel de índice, estilo prancha ---- */
+section[data-testid="stSidebar"] {{
+    background-color: {INK};
+    border-right: 3px solid {AMBER};
+}}
+section[data-testid="stSidebar"] * {{
+    color: #E7EEF2 !important;
+}}
+section[data-testid="stSidebar"] .stCaption, section[data-testid="stSidebar"] small {{
+    color: #93A9B8 !important;
+}}
+.sidebar-brand {{
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 700;
+    font-size: 1.05rem;
+    letter-spacing: 0.02em;
+    color: #FFFFFF !important;
+    margin-bottom: 0;
+}}
+.sidebar-sub {{
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: {AMBER} !important;
+}}
+.norma-heading {{
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 600;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    margin-top: 14px;
+    margin-bottom: 2px;
+    padding-bottom: 3px;
+    border-bottom: 1px dashed rgba(255,255,255,0.25);
+}}
+
+/* Botões da lista de estruturas */
+section[data-testid="stSidebar"] .stButton>button {{
+    background-color: transparent;
+    border: none;
+    border-left: 3px solid transparent;
+    border-radius: 0;
+    text-align: left;
+    padding: 6px 10px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+    color: #C9D6DD !important;
+    transition: all 0.12s ease;
+}}
+section[data-testid="stSidebar"] .stButton>button:hover {{
+    background-color: {INK_2};
+    color: #FFFFFF !important;
+    border-left: 3px solid {AMBER};
+}}
+section[data-testid="stSidebar"] .stSelectbox label {{
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: {AMBER} !important;
+}}
+
+/* ---- Carimbo / title block da estrutura selecionada ---- */
+.title-block {{
+    background: {PAPER_2};
+    border: 1px solid {LINE};
+    border-left: 6px solid var(--accent);
+    border-radius: 6px;
+    padding: 18px 22px;
+    margin-bottom: 20px;
+    box-shadow: 0 1px 2px rgba(19,42,58,0.05);
+}}
+.title-block .eyebrow {{
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-weight: 600;
+    margin-bottom: 4px;
+}}
+.title-block h2 {{
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 1.4rem;
+    font-weight: 600;
+    margin: 0 0 8px 0;
+    color: {TEXT};
+}}
+.norma-stamp {{
+    display: inline-block;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    color: var(--accent);
+    border: 1.5px solid var(--accent);
+    border-radius: 4px;
+    padding: 2px 10px;
+}}
+
+/* ---- Cartões da área principal ---- */
+.panel {{
+    background: {PAPER_2};
+    border: 1px solid {LINE};
+    border-radius: 6px;
+    padding: 18px 20px;
+}}
+.panel h3, .panel-title {{
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #4E6472;
+    margin-top: 0;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid {LINE};
+}}
+.note-row {{
+    display: flex;
+    gap: 10px;
+    padding: 8px 0;
+    border-bottom: 1px dashed {LINE};
+    font-size: 14.5px;
+    line-height: 1.5;
+}}
+.note-row:last-child {{ border-bottom: none; }}
+.note-num {{
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 700;
+    color: {AMBER};
+    min-width: 20px;
+}}
+.empty-hero {{
+    background: {PAPER_2};
+    border: 1px dashed {LINE};
+    border-radius: 8px;
+    padding: 48px 32px;
+    text-align: center;
+}}
+.empty-hero .big {{
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 1.6rem;
+    font-weight: 600;
+    color: {INK};
+}}
+.empty-hero .sub {{
+    color: #5B6E79;
+    margin-top: 6px;
+}}
+
+div[data-testid="stImage"] img {{
+    border: 1px solid {LINE};
+    border-radius: 6px;
+    background: white;
+}}
+</style>
+""", unsafe_allow_html=True)
+
 # Sidebar
 with st.sidebar:
-    st.markdown("### ⚡ Estruturas Elétricas")
-    st.caption("Neoenergia Elektro")
+    st.markdown('<p class="sidebar-brand">⚡ Estruturas Elétricas</p>', unsafe_allow_html=True)
+    st.markdown('<p class="sidebar-sub">Neoenergia Elektro</p>', unsafe_allow_html=True)
     st.divider()
 
     norma_filtro = st.selectbox(
@@ -794,8 +985,7 @@ with st.sidebar:
     normas = ["DIS-NOR-013", "DIS-NOR-014", "DIS-NOR-018"]
     for norma in normas:
         if norma_filtro != "Todas" and norma_filtro != norma: continue
-        cor = CORES_NORMA[norma]
-        st.markdown(f'<div style="color:{cor};font-weight:bold;font-size:12px;margin-top:6px;margin-bottom:4px;">{norma}</div>', unsafe_allow_html=True)
+        st.markdown(f'<div class="norma-heading">{norma}</div>', unsafe_allow_html=True)
         for codigo in codigos_ordenados:
             pag, titulo, n = ESTRUTURAS[codigo]
             if n != norma: continue
@@ -809,15 +999,23 @@ with st.sidebar:
 selecionada = st.session_state.get("estrutura_ativa")
 
 if not selecionada:
-    st.title("⚡ Estruturas Elétricas — Neoenergia Elektro")
-    st.info("👈 Selecione uma estrutura na lista à esquerda.")
+    st.markdown(f"""
+    <div class="empty-hero">
+        <div class="big">⚡ Estruturas Elétricas — Neoenergia Elektro</div>
+        <div class="sub">Selecione uma estrutura na lista à esquerda para abrir a prancha técnica.</div>
+    </div>
+    """, unsafe_allow_html=True)
 else:
     pagina, titulo, norma = ESTRUTURAS[selecionada]
     cor = CORES_NORMA[norma]
 
-    st.markdown(f'<h2 style="color:{cor};">{titulo}</h2>', unsafe_allow_html=True)
-    st.markdown(f'<span style="background:{cor};color:white;padding:2px 10px;border-radius:4px;font-size:13px;">{norma}</span>', unsafe_allow_html=True)
-    st.write("")
+    st.markdown(f"""
+    <div class="title-block" style="--accent: {cor};">
+        <div class="eyebrow">Ficha técnica · {selecionada}</div>
+        <h2>{titulo}</h2>
+        <span class="norma-stamp">{norma}</span>
+    </div>
+    """, unsafe_allow_html=True)
 
     col1, col2 = st.columns([2.5, 1])
 
@@ -830,23 +1028,26 @@ else:
             st.error(f"⚠️ Erro ao carregar imagem: {e}")
 
     with col2:
-        st.markdown("### 📋 Relação de Materiais")
-        # A tabela de materiais é complexa e requer uma extração mais detalhada do PDF.
-        # Por enquanto, consulte o PDF completo para a relação de materiais.
-        
-        # Exibição de Notas
-        st.markdown("### 📌 Notas")
-        
+        st.markdown('<div class="panel">', unsafe_allow_html=True)
+        st.markdown('<div class="panel-title">📌 Notas</div>', unsafe_allow_html=True)
+
         # 1. Tenta pegar do banco estático
         notas = NOTAS_ESTRUTURAS.get(selecionada)
-        
+
         # 2. Se não tiver no banco, tenta extrair dinamicamente (com cache opcional)
         if not notas:
             with st.spinner("Buscando notas no PDF..."):
                 notas = extrair_notas_dinamicamente(PDF_PATHS[norma], pagina)
-        
+
         if notas:
             for i, nota in enumerate(notas, 1):
-                st.markdown(f"**{i}.** {nota}")
+                st.markdown(f'<div class="note-row"><span class="note-num">{i}</span><span>{nota}</span></div>', unsafe_allow_html=True)
         else:
             st.write("Nenhuma nota encontrada para esta estrutura.")
+        st.markdown('</div>', unsafe_allow_html=True)
+
+        st.write("")
+        st.markdown('<div class="panel">', unsafe_allow_html=True)
+        st.markdown('<div class="panel-title">📋 Relação de Materiais</div>', unsafe_allow_html=True)
+        st.caption("Consulte o PDF completo da norma para a relação detalhada de materiais desta estrutura.")
+        st.markdown('</div>', unsafe_allow_html=True)
