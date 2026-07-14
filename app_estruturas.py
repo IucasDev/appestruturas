@@ -700,6 +700,14 @@ NOTAS_ESTRUTURAS = {
     ],
 }
 
+# ─────────────────────────────────────────────────────────────────
+# BANCO DE MATERIAIS (preencha manualmente para forçar uma relação
+# de materiais específica para uma estrutura; se a estrutura não
+# estiver aqui, o app tenta extrair automaticamente do PDF)
+# Formato: "CODIGO_ESTRUTURA": {"header": [...colunas...], "linhas": [[...],[...]]}
+# ─────────────────────────────────────────────────────────────────
+MATERIAIS_ESTRUTURAS = {}
+
 CORES_NORMA = {
     "DIS-NOR-013": "#1e6b3c",
     "DIS-NOR-014": "#1a4f8a",
@@ -762,6 +770,51 @@ def extrair_notas_dinamicamente(pdf_path, pagina_inicio):
                                 break
                     if found_notes: return found_notes
     except:
+        pass
+    return None
+
+@st.cache_data(show_spinner=False)
+def extrair_materiais_dinamicamente(pdf_path, pagina_inicio):
+    """Tenta localizar e extrair a relação de materiais (lista/tabela com
+    ITEM / CÓDIGO / DESCRIÇÃO / UNIDADE / QUANTIDADE) da estrutura,
+    procurando na página do desenho e nas páginas seguintes.
+
+    Retorna um dict {"header": [...], "linhas": [[...], ...]} ou None
+    se nada reconhecível for encontrado (formato pode variar entre
+    normas — ajuste as KEYWORDS_HEADER abaixo caso não funcione com
+    o layout real dos seus PDFs)."""
+    import pdfplumber
+
+    KEYWORDS_HEADER = ["DESCRIÇÃO", "DESCRICAO", "MATERIAL", "QTD", "QUANT", "UNID", "CÓDIGO", "CODIGO"]
+
+    try:
+        with pdfplumber.open(pdf_path) as pdf:
+            # A relação de materiais normalmente vem na própria página do
+            # desenho ou logo nas páginas seguintes
+            for p_idx in range(pagina_inicio - 1, min(pagina_inicio + 4, len(pdf.pages))):
+                page = pdf.pages[p_idx]
+                tabelas = page.extract_tables()
+                for tabela in tabelas:
+                    if not tabela or len(tabela) < 2:
+                        continue
+                    header_raw = [str(c).strip() if c else "" for c in tabela[0]]
+                    header_upper = " ".join(header_raw).upper()
+                    if not any(k in header_upper for k in KEYWORDS_HEADER):
+                        continue
+                    n_cols = len(header_raw)
+                    linhas = []
+                    for row in tabela[1:]:
+                        cels = [str(c).strip() if c else "" for c in row]
+                        # ajusta o tamanho da linha ao cabeçalho
+                        if len(cels) < n_cols:
+                            cels += [""] * (n_cols - len(cels))
+                        elif len(cels) > n_cols:
+                            cels = cels[:n_cols]
+                        if any(cels):
+                            linhas.append(cels)
+                    if linhas:
+                        return {"header": header_raw, "linhas": linhas}
+    except Exception:
         pass
     return None
 
@@ -1049,5 +1102,23 @@ else:
         st.write("")
         st.markdown('<div class="panel">', unsafe_allow_html=True)
         st.markdown('<div class="panel-title">📋 Relação de Materiais</div>', unsafe_allow_html=True)
-        st.caption("Consulte o PDF completo da norma para a relação detalhada de materiais desta estrutura.")
+
+        # 1. Tenta pegar do banco estático (preenchido manualmente)
+        materiais = MATERIAIS_ESTRUTURAS.get(selecionada)
+
+        # 2. Se não tiver no banco, tenta extrair automaticamente do PDF
+        if not materiais:
+            with st.spinner("Buscando relação de materiais no PDF..."):
+                materiais = extrair_materiais_dinamicamente(PDF_PATHS[norma], pagina)
+
+        if materiais:
+            linhas_tabela = [
+                dict(zip(materiais["header"], linha))
+                for linha in materiais["linhas"]
+            ]
+            st.table(linhas_tabela)
+        else:
+            st.write("Relação de materiais não encontrada automaticamente para esta estrutura.")
+            st.caption("Consulte o PDF completo da norma para a relação detalhada de materiais desta estrutura.")
+
         st.markdown('</div>', unsafe_allow_html=True)
